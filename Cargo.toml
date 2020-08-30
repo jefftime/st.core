@@ -1,0 +1,9 @@
+[workspace]
+members = ["apprunner"]
+
+[profile.dev]
+panic = "abort"
+lto = true
+
+[profile.release]
+panic = "abort"
