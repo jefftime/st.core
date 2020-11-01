@@ -14,6 +14,14 @@ name = "c"
 version = "0.1.0"
 
 [[package]]
+name = "dl"
+version = "0.1.0"
+dependencies = [
+ "c",
+ "lstd",
+]
+
+[[package]]
 name = "lstd"
 version = "0.1.0"
 dependencies = [
@@ -24,5 +32,23 @@ dependencies = [
 name = "tortuga"
 version = "0.1.0"
 dependencies = [
+ "c",
+ "dl",
  "lstd",
+ "vulkan_h",
+ "xcb_h",
+]
+
+[[package]]
+name = "vulkan_h"
+version = "0.1.0"
+dependencies = [
+ "c",
+]
+
+[[package]]
+name = "xcb_h"
+version = "0.1.0"
+dependencies = [
+ "c",
 ]

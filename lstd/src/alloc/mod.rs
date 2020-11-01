@@ -2,7 +2,8 @@ use crate::stdlib::{free, posix_memalign};
 use core::{
     alloc::Layout,
     mem::MaybeUninit,
-    ops::{Deref, DerefMut, Drop}
+    ops::{Deref, DerefMut, Drop},
+    ptr::{drop_in_place, null_mut}
 };
 
 pub struct Box<T> {
@@ -83,6 +84,7 @@ pub fn alloc<T>(count: usize) -> Option<*mut T> {
 
 pub fn dealloc<T>(ptr: *mut T) {
     unsafe {
+        drop_in_place(ptr);
         free(ptr as *mut _);
     }
 }

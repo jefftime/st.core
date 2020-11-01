@@ -8,7 +8,7 @@ use core::{
     ops::Drop
 };
 
-const STRING_BUFFER_SIZE: usize = 64;
+const STRING_BUFFER_SIZE: usize = 1024;
 pub static mut STRING_BUFFER: StringWriter =
     StringWriter { buf: [0_u8; STRING_BUFFER_SIZE], cursor: 0 };
 
