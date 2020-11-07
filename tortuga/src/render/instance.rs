@@ -82,9 +82,9 @@ impl Instance {
         })
     }
 
-    pub fn select(&self) -> PhysicalDevice {
-        PhysicalDevice { instance: &self }
-    }
+    // pub fn devices<'a>(&'a self) -> &'a [PhysicalDevice] {
+    //     self.devices
+    // }
 }
 
 impl Drop for Instance {

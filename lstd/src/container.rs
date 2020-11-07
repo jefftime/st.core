@@ -18,7 +18,7 @@ impl<T: Copy> Array<T> {
         }
 
         Array {
-            data: alloc(count).unwrap(),
+            data: data,
             len: count
         }
     }

@@ -63,7 +63,7 @@ impl NativeWindow {
 
         Some(NativeWindow {
             connection: cn,
-            window: 0,
+            window: wn,
             delete_atom: delete_atom,
             width: Cell::new(width),
             height: Cell::new(height),
@@ -156,13 +156,13 @@ impl NativeWindow {
                 cn,
                 0,
                 wm_protocols.len() as u16,
-                wm_protocols as *const u8 as *const _
+                wm_protocols.as_ptr() as *const _
             );
             let d_ck = xcb_intern_atom(
                 cn,
                 0,
                 wm_delete_window.len() as u16,
-                wm_delete_window as *const u8 as *const _
+                wm_delete_window.as_ptr() as *const _
             );
 
             let protocol = xcb_intern_atom_reply(cn, p_ck, null_mut());
@@ -231,6 +231,7 @@ impl Window for NativeWindow {
                 _ => {}
             };
 
+            dealloc(event);
             event = unsafe { xcb_poll_for_event(cn) };
         }
     }
@@ -245,7 +246,6 @@ impl Drop for NativeWindow {
         let cn = self.connection as *mut _;
         unsafe {
             xcb_destroy_window(cn, self.window);
-            xcb_flush(cn);
             xcb_disconnect(cn);
         }
     }
