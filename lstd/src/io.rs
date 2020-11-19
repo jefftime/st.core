@@ -80,7 +80,7 @@ macro_rules! println {
     ($s:expr) => (println!($s,));
 
     ($fmt:expr, $($expr:expr),*) => {{
-        lstd::print!(concat!($fmt, "\n"), $($expr),*);
+        $crate::print!(concat!($fmt, "\n"), $($expr),*);
     }}
 }
 

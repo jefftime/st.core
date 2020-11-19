@@ -1,5 +1,6 @@
 use crate::alloc::{alloc, dealloc};
 use core::{
+    cell::Cell,
     ops::{Deref, DerefMut, Drop},
     ptr::drop_in_place,
     slice::{from_raw_parts, from_raw_parts_mut}
@@ -61,5 +62,53 @@ impl<T: Copy> Deref for Array<T> {
 impl<T: Copy> DerefMut for Array<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { from_raw_parts_mut(self.data, self.len) }
+    }
+}
+
+pub struct Rc<T> {
+    counter: *mut usize,
+    data: *mut T
+}
+
+impl<T> Rc<T> {
+    pub fn new(value: T) -> Option<Rc<T>> {
+        let counter = alloc::<usize>(1)?;
+        unsafe { *counter = 1; }
+
+        let data = alloc(1)?;
+        unsafe { data.write(value); }
+        Some(Rc { counter: counter, data: data })
+    }
+
+    pub fn clone(this: &Rc<T>) -> Rc<T> {
+        unsafe { *this.counter += 1; }
+
+        Rc {
+            counter: this.counter,
+            data: this.data
+        }
+    }
+
+    pub fn as_ptr(this: &Rc<T>) -> *mut T {
+        this.data
+    }
+}
+
+impl<T> Deref for Rc<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*self.data }
+    }
+}
+
+impl<T> Drop for Rc<T> {
+    fn drop(&mut self) {
+        unsafe { *self.counter -= 1; }
+
+        if unsafe { *self.counter } == 0 {
+            dealloc(self.counter);
+            dealloc(self.data);
+        }
     }
 }

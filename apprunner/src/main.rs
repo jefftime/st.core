@@ -7,7 +7,7 @@ use lstd::prelude::*;
 use lstd::{abort, println};
 use tortuga::{
     window::{Window, create_window},
-    render::{Instance}
+    // render::{Instance}
 };
 
 #[link(name = "asan")]
@@ -28,7 +28,6 @@ extern fn main(_: c_int, _: *const *const c_char) -> c_int {
     let window = create_window("Test", 640, 480).unwrap();
     // let _instance = Instance::new().unwrap();
 
-    println!("test");
     'main: loop {
         if window.should_close() {
             break 'main;

@@ -17,7 +17,7 @@ pub fn abort() -> ! {
 pub mod prelude {
     pub use crate::{print, println};
     pub use crate::alloc::Box;
-    pub use crate::container::Array;
+    pub use crate::container::{Array, Rc};
     pub use crate::cstr;
 }
 
