@@ -13,16 +13,13 @@ use vulkan_h::*;
 
 pub struct Surface {
     instance: Rc<RefCell<Instance>>,
-    vk_destroy_surface: PFN_vkDestroySurfaceKHR,
     pub surface: VkSurfaceKHR
 }
 
 impl Surface {
     pub fn new(
         instance: &Rc<RefCell<Instance>>,
-        window: &dyn Window,
-        vk_create_surface: PFN_vkCreateXcbSurfaceKHR,
-        vk_destroy_surface: PFN_vkDestroySurfaceKHR
+        window: &dyn Window
     ) -> Option<Surface> {
         let (connection, window) = window.get_os_details();
         let create_info = VkXcbSurfaceCreateInfoKHR {
@@ -35,11 +32,10 @@ impl Surface {
 
         Some(Surface {
             instance: Rc::clone(instance),
-            vk_destroy_surface: vk_destroy_surface,
             surface: unsafe {
                 let mut surface: MaybeUninit<VkSurfaceKHR> =
                     MaybeUninit::uninit();
-                let result = vk_create_surface?(
+                let result = instance.borrow().create_xcb_surface?(
                     instance.borrow().instance,
                     &create_info as *const _ as *mut _,
                     null_mut(),
@@ -54,7 +50,7 @@ impl Surface {
 
 impl Drop for Surface {
     fn drop(&mut self) {
-        if let Some(f) = self.vk_destroy_surface {
+        if let Some(f) = self.instance.borrow().destroy_surface {
             unsafe {
                 f(
                     self.instance.borrow().instance,

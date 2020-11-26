@@ -1,8 +1,7 @@
 use crate::window::Window;
 use lstd::{
     alloc::dealloc,
-    container::Array,
-    println
+    container::Array
 };
 use core::{
     cell::Cell,
@@ -19,9 +18,9 @@ pub fn create_window(
     height :u16
 ) -> Option<NativeWindow> {
     let title: Array<u8> = {
-        let mut new_title = Array::new(b'\0', title.len() + 1);
+        let mut new_title = Array::new(title.len() + 1);
         for (i, c) in title.as_bytes().iter().enumerate() {
-            new_title[i] = *c;
+            new_title.push(*c);
         }
 
         new_title

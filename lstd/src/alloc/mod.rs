@@ -36,8 +36,14 @@ impl<T> Box<T> {
         Box { data: ptr }
     }
 
-    pub fn into_raw(b: Box<T>) -> *mut T {
-        b.data
+    pub fn into_raw(this: Box<T>) -> *mut T {
+        let result = this.data;
+        core::mem::forget(this);
+        result
+    }
+
+    pub fn as_ptr(this: &Box<T>) -> *mut T {
+        this.data
     }
 }
 
@@ -84,7 +90,6 @@ pub fn alloc<T>(count: usize) -> Option<*mut T> {
 
 pub fn dealloc<T>(ptr: *mut T) {
     unsafe {
-        drop_in_place(ptr);
         free(ptr as *mut _);
     }
 }

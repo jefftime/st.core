@@ -3,11 +3,10 @@
 
 use core::panic::PanicInfo;
 use c::types::{c_int, c_char};
-use lstd::prelude::*;
 use lstd::{abort, println};
 use tortuga::{
     window::{Window, create_window},
-    // render::{Instance}
+    render::Context
 };
 
 #[link(name = "asan")]
@@ -26,7 +25,12 @@ fn panic_handler(info: &PanicInfo) -> ! {
 #[no_mangle]
 extern fn main(_: c_int, _: *const *const c_char) -> c_int {
     let window = create_window("Test", 640, 480).unwrap();
-    // let _instance = Instance::new().unwrap();
+    let context = Context::new(&window).unwrap();
+    let physical_devices = context.get_physical_devices().unwrap();
+
+    for pd in physical_devices.iter() {
+        println!("device!");
+    }
 
     'main: loop {
         if window.should_close() {
