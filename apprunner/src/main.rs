@@ -27,10 +27,11 @@ extern fn main(_: c_int, _: *const *const c_char) -> c_int {
     let window = create_window("Test", 640, 480).unwrap();
     let context = Context::new(&window).unwrap();
     let physical_devices = context.get_physical_devices().unwrap();
-
-    for pd in physical_devices.iter() {
-        println!("device!");
-    }
+    let device = context.create_device(&physical_devices[0]);
+    match device {
+        None => println!("Couldn't create device"),
+        _ => {}
+    };
 
     'main: loop {
         if window.should_close() {

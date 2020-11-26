@@ -2,7 +2,6 @@
 
 use c::types::*;
 use core::{
-    mem::MaybeUninit,
     ops::Drop,
     ptr::null_mut
 };
@@ -37,7 +36,7 @@ impl SharedLibrary {
         };
         match symbol {
             h if h == null_mut() => None,
-            h => Some(symbol)
+            _ => Some(symbol)
         }
     }
 }

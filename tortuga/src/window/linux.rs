@@ -19,7 +19,7 @@ pub fn create_window(
 ) -> Option<NativeWindow> {
     let title: Array<u8> = {
         let mut new_title = Array::new(title.len() + 1);
-        for (i, c) in title.as_bytes().iter().enumerate() {
+        for c in title.as_bytes().iter() {
             new_title.push(*c);
         }
 
@@ -48,10 +48,9 @@ impl NativeWindow {
         width: u16,
         height: u16
     ) -> Option<NativeWindow> {
-        let (cn, setup, screen) = NativeWindow::setup_connection()?;
+        let (cn, screen) = NativeWindow::setup_connection()?;
         let wn = NativeWindow::setup_window(
             cn,
-            setup,
             screen,
             title,
             width,
@@ -72,7 +71,6 @@ impl NativeWindow {
 
     fn setup_connection() -> Option<(
         *const xcb_connection_t,
-        *const xcb_setup_t,
         *const xcb_screen_t
     )> {
         let (cn, index) = unsafe {
@@ -83,7 +81,7 @@ impl NativeWindow {
         if cn == null() { return None; }
 
         // Get the information for the screen that initiated the connection
-        let (setup, screen) = unsafe {
+        let screen = unsafe {
             let setup = xcb_get_setup(cn as *mut _);
             let mut screen_iter =
                 xcb_setup_roots_iterator(setup);
@@ -91,15 +89,14 @@ impl NativeWindow {
                 xcb_screen_next(&mut screen_iter as *mut _);
             }
 
-            (setup, screen_iter.data)
+            screen_iter.data
         };
 
-        Some((cn, setup, screen))
+        Some((cn, screen))
     }
 
     fn setup_window(
         cn: *const xcb_connection_t,
-        setup: *const xcb_setup_t,
         screen: *const xcb_screen_t,
         title: &str,
         width: u16,

@@ -32,7 +32,6 @@ fn main() {
                 "--whitelist-type", "PFN_vkVoidFunction",
                 "--whitelist-type", "PFN_vkCreateInstance",
                 "--whitelist-type", "PFN_vkDestroyInstance",
-                "--whitelist-type", "PFN_vkEnumerateInstanceExtensionProperties",
                 "--whitelist-type", "PFN_vkEnumeratePhysicalDevices",
                 "--whitelist-type", "PFN_vkCreateXcbSurfaceKHR",
                 "--whitelist-type", "PFN_vkDestroySurfaceKHR",

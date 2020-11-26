@@ -2,23 +2,22 @@ use crate::{
     render::{
         instance::Instance,
         surface::Surface,
-        physical_device::PhysicalDevice
+        physical_device::PhysicalDevice,
+        Device
     },
     window::Window
 };
 use c::types::*;
 use core::{
     cell::RefCell,
-    mem::{MaybeUninit, ManuallyDrop, transmute},
+    mem::{MaybeUninit, ManuallyDrop},
     ops::Drop,
     ptr::null_mut
 };
-use dl::SharedLibrary;
 use lstd::prelude::*;
 use vulkan_h::*;
 
 pub struct Context {
-    libvulkan: SharedLibrary,
     instance: ManuallyDrop<Rc<RefCell<Instance>>>,
     surface: ManuallyDrop<Surface>
 }
@@ -30,24 +29,13 @@ impl Context {
             VK_KHR_XCB_SURFACE_EXTENSION_NAME.as_ptr() as *const c_char,
         ];
 
-        let libvulkan = SharedLibrary::open(cstr!("libvulkan.so"))?;
-        let symbol = libvulkan.symbol(cstr!("vkGetInstanceProcAddr"))?;
-        let get_instance_proc_addr = unsafe {
-            type T = PFN_vkGetInstanceProcAddr;
-            transmute::<*mut c_void, T>(symbol)
-        };
-
-        let instance = Instance::new(
-            get_instance_proc_addr,
-            &extensions
-        )?;
+        let instance = Instance::new(&extensions)?;
         let instance = Rc::new(RefCell::new(instance));
         let instance = ManuallyDrop::new(instance);
 
         let surface = Surface::new(&instance, window)?;
         let surface = ManuallyDrop::new(surface);
         Some(Context {
-            libvulkan: libvulkan,
             instance: instance,
             surface: surface,
         })
@@ -73,16 +61,18 @@ impl Context {
 
         let mut vk_devices = Array::new(n_devices as usize);
         let result = unsafe {
-            enumerate_devices?(
+            let result = enumerate_devices?(
                 self.instance.borrow().instance,
                 &mut n_devices as *mut _,
                 vk_devices.as_mut_ptr()
-            )
+            );
+            vk_devices.assume_init(n_devices as isize);
+            result
         };
         if result != VK_SUCCESS { return None; }
 
         let mut physical_devices = Array::new(n_devices as usize);
-        for (i, device) in vk_devices.iter().enumerate() {
+        for device in vk_devices.iter() {
             physical_devices.push(PhysicalDevice::new(
                 &self.instance,
                 *device
@@ -90,6 +80,13 @@ impl Context {
         }
 
         Some(physical_devices)
+    }
+
+    pub fn create_device(
+        &self,
+        _physical_device: &PhysicalDevice
+    ) -> Option<Device> {
+        None
     }
 }
 

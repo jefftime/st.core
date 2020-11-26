@@ -1,4 +1,3 @@
-use crate::render::physical_device::PhysicalDevice;
 use c::types::*;
 use dl::SharedLibrary;
 use lstd::prelude::*;
@@ -10,10 +9,9 @@ use core::{
 };
 
 pub struct Instance {
+    pub libvulkan: SharedLibrary,
     pub instance: VkInstance,
-    pub get_instance_proc_addr: PFN_vkGetInstanceProcAddr,
     pub create_instance: PFN_vkCreateInstance,
-    pub enumerate_instance_extension_properties: PFN_vkEnumerateInstanceExtensionProperties,
     pub enumerate_physical_devices: PFN_vkEnumeratePhysicalDevices,
     pub destroy_instance: PFN_vkDestroyInstance,
     pub create_xcb_surface: PFN_vkCreateXcbSurfaceKHR,
@@ -52,15 +50,7 @@ macro_rules! load_vulkan_function {
 
 
 impl Instance {
-    pub fn new(
-        get_instance_proc_addr: PFN_vkGetInstanceProcAddr,
-        extensions: &[*const c_char]
-    ) -> Option<Instance> {
-        let extensions = [
-            VK_KHR_SURFACE_EXTENSION_NAME.as_ptr() as *const c_char,
-            VK_KHR_XCB_SURFACE_EXTENSION_NAME.as_ptr() as *const c_char
-        ];
-
+    pub fn new(extensions: &[*const c_char]) -> Option<Instance> {
         let libvulkan = SharedLibrary::open(cstr!("libvulkan.so"))?;
         let symbol = libvulkan.symbol(cstr!("vkGetInstanceProcAddr"))?;
         let get_instance_proc_addr = unsafe {
@@ -68,10 +58,8 @@ impl Instance {
             transmute::<*mut c_void, T>(symbol)
         };
 
-        let (
-            vk_create_instance,
-            vk_enumerate_instance_extension_properties
-        ) = load_preinstance_functions(get_instance_proc_addr)?;
+        let vk_create_instance =
+            load_preinstance_functions(get_instance_proc_addr)?;
 
         let instance = create_instance(
             vk_create_instance,
@@ -90,21 +78,16 @@ impl Instance {
         )?;
 
         Some(Instance {
+            libvulkan: libvulkan,
             instance: instance,
-            get_instance_proc_addr: get_instance_proc_addr,
             create_instance: vk_create_instance,
             destroy_instance: vk_destroy_instance,
-            enumerate_instance_extension_properties: None,
             enumerate_physical_devices: vk_enumerate_physical_devices,
             create_xcb_surface: vk_create_xcb_surface,
             destroy_surface: vk_destroy_surface,
             get_physical_device_properties: vk_get_physical_device_properties
         })
     }
-
-    // pub fn devices() -> Array<PhysicalDevice> {
-
-    // }
 }
 
 impl Drop for Instance {
@@ -180,10 +163,7 @@ fn create_instance(
 
 fn load_preinstance_functions(
     f: PFN_vkGetInstanceProcAddr
-) -> Option<(
-    PFN_vkCreateInstance,
-    PFN_vkEnumerateInstanceExtensionProperties
-)> {
+) -> Option<PFN_vkCreateInstance> {
     macro_rules! load {
         ($type:ident) => {{
             match load_vulkan_function!(null_mut(), f, $type) {
@@ -193,10 +173,9 @@ fn load_preinstance_functions(
         }}
     }
 
-    Some((
-        load!(PFN_vkCreateInstance),
-        load!(PFN_vkEnumerateInstanceExtensionProperties)
-    ))
+    Some(
+        load!(PFN_vkCreateInstance)
+    )
 }
 
 fn load_instance_functions(

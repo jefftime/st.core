@@ -2,8 +2,7 @@ use crate::stdlib::{free, posix_memalign};
 use core::{
     alloc::Layout,
     mem::MaybeUninit,
-    ops::{Deref, DerefMut, Drop},
-    ptr::{drop_in_place, null_mut}
+    ops::{Deref, DerefMut, Drop}
 };
 
 pub struct Box<T> {

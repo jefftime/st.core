@@ -1,9 +1,6 @@
 #![no_std]
 
-use c::{
-    types::c_char,
-    stdlib
-};
+use c::stdlib;
 
 pub mod io;
 pub mod alloc;
