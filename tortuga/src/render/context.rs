@@ -1,8 +1,8 @@
 use crate::{
-    render::{
-        instance::Instance,
-        surface::Surface,
-        physical_device::PhysicalDevice,
+    render::vulkan::{
+        Instance,
+        Surface,
+        PhysicalDevice,
         Device
     },
     window::Window
@@ -19,7 +19,7 @@ use vulkan_h::*;
 
 pub struct Context {
     instance: ManuallyDrop<Rc<RefCell<Instance>>>,
-    surface: ManuallyDrop<Surface>
+    surface: ManuallyDrop<Rc<RefCell<Surface>>>
 }
 
 impl Context {
@@ -34,10 +34,11 @@ impl Context {
         let instance = ManuallyDrop::new(instance);
 
         let surface = Surface::new(&instance, window)?;
+        let surface = Rc::new(RefCell::new(surface));
         let surface = ManuallyDrop::new(surface);
         Some(Context {
             instance: instance,
-            surface: surface,
+            surface: surface
         })
     }
 
@@ -84,9 +85,9 @@ impl Context {
 
     pub fn create_device(
         &self,
-        _physical_device: &PhysicalDevice
+        physical_device: &PhysicalDevice
     ) -> Option<Device> {
-        None
+        Device::new(&self.instance, &self.surface, physical_device)
     }
 }
 

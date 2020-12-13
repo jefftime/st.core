@@ -48,6 +48,9 @@ impl<T> Box<T> {
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
+        unsafe {
+            core::ptr::drop_in_place(self.data);
+        }
         dealloc(self.data);
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    render::instance::Instance,
+    render::vulkan::Instance,
     window::Window
 };
 use core::{

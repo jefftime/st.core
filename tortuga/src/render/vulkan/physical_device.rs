@@ -1,4 +1,4 @@
-use crate::render::instance::Instance;
+use crate::render::vulkan::Instance;
 use core::{
     cell::RefCell,
     mem::MaybeUninit

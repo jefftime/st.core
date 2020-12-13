@@ -3,51 +3,28 @@ use dl::SharedLibrary;
 use lstd::prelude::*;
 use vulkan_h::*;
 use core::{
+    cell::RefCell,
     mem::{MaybeUninit, transmute},
     ops::Drop,
     ptr::{null, null_mut}
 };
 
 pub struct Instance {
-    pub libvulkan: SharedLibrary,
+    pub libvulkan: Rc<RefCell<SharedLibrary>>,
     pub instance: VkInstance,
+    pub get_instance_proc_addr: PFN_vkGetInstanceProcAddr,
     pub create_instance: PFN_vkCreateInstance,
     pub enumerate_physical_devices: PFN_vkEnumeratePhysicalDevices,
     pub destroy_instance: PFN_vkDestroyInstance,
     pub create_xcb_surface: PFN_vkCreateXcbSurfaceKHR,
     pub destroy_surface: PFN_vkDestroySurfaceKHR,
-    pub get_physical_device_properties: PFN_vkGetPhysicalDeviceProperties
+    pub get_physical_device_properties: PFN_vkGetPhysicalDeviceProperties,
+    pub get_physical_device_queue_family_properties: PFN_vkGetPhysicalDeviceQueueFamilyProperties,
+    pub get_physical_device_surface_support: PFN_vkGetPhysicalDeviceSurfaceSupportKHR,
+    pub create_device: PFN_vkCreateDevice,
+    pub destroy_device: PFN_vkDestroyDevice,
+    pub get_device_proc_addr: PFN_vkGetDeviceProcAddr,
 }
-
-// Bindgen can't rustify VK_MAKE_VERSION
-macro_rules! make_version {
-    ($major:literal, $minor:literal, $patch:literal) => {{
-        let major: u32 = $major;
-        let minor: u32 = $minor;
-        let patch: u32 = $patch;
-
-        (major << 22) | (minor << 12) | patch
-    }}
-}
-
-macro_rules! load_vulkan_function {
-    ($instance:expr, $f:expr, $type:ident) => {{
-        let f = $f?;
-        let instance: VkInstance = $instance;
-
-        type T = PFN_vkVoidFunction;
-        type U = $type;
-        let symbol_str = &concat!(stringify!($type), "\0")[4..];
-
-        unsafe {
-            match f(instance, symbol_str.as_ptr() as *const _) {
-                Some(ref f) => transmute::<T, U>(Some(*f)),
-                None => None
-            }
-        }
-    }}
-}
-
 
 impl Instance {
     pub fn new(extensions: &[*const c_char]) -> Option<Instance> {
@@ -71,21 +48,32 @@ impl Instance {
             vk_create_xcb_surface,
             vk_destroy_surface,
             vk_enumerate_physical_devices,
-            vk_get_physical_device_properties
+            vk_get_physical_device_properties,
+            vk_get_physical_device_queue_family_properties,
+            vk_get_physical_device_surface_support,
+            vk_create_device,
+            vk_destroy_device,
+            vk_get_device_proc_addr
         ) = load_instance_functions(
             &instance,
             get_instance_proc_addr
         )?;
 
         Some(Instance {
-            libvulkan: libvulkan,
+            libvulkan: Rc::new(RefCell::new(libvulkan)),
             instance: instance,
+            get_instance_proc_addr: get_instance_proc_addr,
             create_instance: vk_create_instance,
             destroy_instance: vk_destroy_instance,
             enumerate_physical_devices: vk_enumerate_physical_devices,
             create_xcb_surface: vk_create_xcb_surface,
             destroy_surface: vk_destroy_surface,
-            get_physical_device_properties: vk_get_physical_device_properties
+            get_physical_device_properties: vk_get_physical_device_properties,
+            get_physical_device_queue_family_properties: vk_get_physical_device_queue_family_properties,
+            get_physical_device_surface_support: vk_get_physical_device_surface_support,
+            create_device: vk_create_device,
+            destroy_device: vk_destroy_device,
+            get_device_proc_addr: vk_get_device_proc_addr
         })
     }
 }
@@ -186,7 +174,12 @@ fn load_instance_functions(
     PFN_vkCreateXcbSurfaceKHR,
     PFN_vkDestroySurfaceKHR,
     PFN_vkEnumeratePhysicalDevices,
-    PFN_vkGetPhysicalDeviceProperties
+    PFN_vkGetPhysicalDeviceProperties,
+    PFN_vkGetPhysicalDeviceQueueFamilyProperties,
+    PFN_vkGetPhysicalDeviceSurfaceSupportKHR,
+    PFN_vkCreateDevice,
+    PFN_vkDestroyDevice,
+    PFN_vkGetDeviceProcAddr
 )> {
     macro_rules! load {
         ($type:ident) => {{
@@ -202,7 +195,12 @@ fn load_instance_functions(
         load!(PFN_vkCreateXcbSurfaceKHR),
         load!(PFN_vkDestroySurfaceKHR),
         load!(PFN_vkEnumeratePhysicalDevices),
-        load!(PFN_vkGetPhysicalDeviceProperties)
+        load!(PFN_vkGetPhysicalDeviceProperties),
+        load!(PFN_vkGetPhysicalDeviceQueueFamilyProperties),
+        load!(PFN_vkGetPhysicalDeviceSurfaceSupportKHR),
+        load!(PFN_vkCreateDevice),
+        load!(PFN_vkDestroyDevice),
+        load!(PFN_vkGetDeviceProcAddr)
     ))
 }
 

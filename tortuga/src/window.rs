@@ -1,4 +1,4 @@
-#[cfg_attr(target_os = "linux", path = "linux.rs")]
+#[cfg_attr(target_os = "linux", path = "window/linux.rs")]
 mod native;
 
 #[cfg(target_os = "linux")]
